@@ -18,12 +18,16 @@ const onlyLow = document.getElementById('onlyLow');
 const totalQty = document.getElementById('totalQty');
 const totalItems = document.getElementById('totalItems');
 
+// floating actions menu
+const rowMenu = document.getElementById('rowMenu');
+let rowMenuItemId = null;
+
 // ====== Utils ======
 function loadItems(){
   try{ const raw = localStorage.getItem(LS_KEY); if(!raw) return SAMPLE; const parsed = JSON.parse(raw); return Array.isArray(parsed)?parsed:SAMPLE; }catch{ return SAMPLE }
 }
 function saveItems(){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])) }
+function escapeHtml(s){ return String(s).replace(/[&<>\"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
 function ts(){ return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') }
 
 // ====== Render ======
@@ -45,22 +49,41 @@ function render(){
       <td>${escapeHtml(it.value||'')}</td>
       <td>${escapeHtml(it.package||'')}</td>
       <td style="max-width:28rem;white-space:pre-wrap">${escapeHtml(it.notes||'')}</td>
-      <td class="actions"><button class="act btn ghost">⋮</button>
-        <div class="menu">
-          <button data-edit>Modifica</button>
-          <button data-del style="color:#b91c1c">Elimina</button>
-        </div>
-      </td>`;
+      <td class="actions"><button class="act btn ghost" aria-label="Azioni riga">⋮</button></td>`;
     tbody.appendChild(tr);
-    const actions = tr.querySelector('.actions');
-    tr.querySelector('.act').addEventListener('click',()=>{ actions.classList.toggle('open') })
-    document.addEventListener('click', (e)=>{ if(!actions.contains(e.target)) actions.classList.remove('open') })
-    tr.querySelector('[data-edit]').addEventListener('click',()=> openDialog(it))
-    tr.querySelector('[data-del]').addEventListener('click',()=> delItem(it.id))
+
+    const actBtn = tr.querySelector('.act');
+    actBtn.addEventListener('click', (ev) => openRowMenu(ev.currentTarget, it.id));
   }
   totalQty.textContent = String(arr.reduce((s,i)=>s+(+i.quantity||0),0));
   totalItems.textContent = String(items.length);
 }
+
+// ====== Row menu (fixed) ======
+function openRowMenu(anchorBtn, itemId){
+  rowMenuItemId = itemId;
+  const r = anchorBtn.getBoundingClientRect();
+  // posiziona sotto al bottone, con margine
+  rowMenu.style.left = Math.min(window.innerWidth - 180, r.left).toFixed(0) + 'px';
+  rowMenu.style.top = (r.bottom + 6 + window.scrollY) + 'px';
+  rowMenu.classList.remove('hidden');
+}
+function closeRowMenu(){ rowMenu.classList.add('hidden'); rowMenuItemId = null }
+document.addEventListener('click', (e)=>{ if (!rowMenu.contains(e.target) && !e.target.classList.contains('act')) closeRowMenu() }, {passive:true});
+document.addEventListener('touchstart', (e)=>{ if (!rowMenu.contains(e.target) && !e.target.classList.contains('act')) closeRowMenu() }, {passive:true});
+
+// actions
+rowMenu.querySelector('[data-edit]').addEventListener('click', () => {
+  closeRowMenu();
+  const it = items.find(x => x.id === rowMenuItemId);
+  if (it) openDialog(it);
+});
+rowMenu.querySelector('[data-del]').addEventListener('click', () => {
+  closeRowMenu();
+  if (confirm('Eliminare questo elemento?')) {
+    delItem(rowMenuItemId);
+  }
+});
 
 // ====== CSV helpers ======
 function exportCSV(){
@@ -72,12 +95,25 @@ function exportCSV(){
   download(lines.join('\n'), `archivio-componenti-${ts()}.csv`, 'text/csv;charset=utf-8;');
 }
 function exportJSON(){ download(JSON.stringify(items,null,2), 'archivio-componenti.json', 'application/json'); }
-function download(text, name, type){ const blob = new Blob([text],{type}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+function download(text, name, type){
+  try{
+    const blob = new Blob([text],{type});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.rel = 'noopener';
+    a.click();           // gesture dell'utente (funziona su Android)
+    setTimeout(()=>URL.revokeObjectURL(url), 1500);
+  }catch(err){
+    alert('Impossibile scaricare: ' + err?.message);
+  }
+}
 function parseCSV(text){
   const rows=[]; let i=0, cur='', inQ=false, row=[]; while(i<=text.length){
     const ch = text[i] ?? '\n';
-    if (inQ){ if (ch==='"' && text[i+1]==='"'){ cur+='"'; i++; } else if (ch==='"'){ inQ=false; } else { cur+=ch } }
-    else { if (ch==='"') inQ=true; else if (ch===','){ row.push(cur); cur=''; } else if (ch==='\n' || i===text.length){ row.push(cur); rows.push(row); row=[]; cur=''; } else { cur+=ch } }
+    if (inQ){ if (ch==='"' && text[i+1]==='"'){ cur+='"'; i++; } else if (ch === '"'){ inQ=false; } else { cur+=ch } }
+    else { if (ch === '"') inQ=true; else if (ch===','){ row.push(cur); cur=''; } else if (ch === '\n' || i === text.length){ row.push(cur); rows.push(row); row=[]; cur=''; } else { cur+=ch } }
     i++;
   } return rows;
 }
@@ -129,6 +165,7 @@ document.getElementById('dlgSave').addEventListener('click', (e)=>{
 document.getElementById('btnNew').addEventListener('click', ()=> openDialog(null));
 document.getElementById('btnImport').addEventListener('click', ()=> document.getElementById('fileImport').click());
 document.getElementById('btnExportCSV').addEventListener('click', exportCSV);
+document.getElementById('btnExportJSON').addEventListener('click', exportJSON);
 document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
 
 // Reset & Clear
@@ -172,3 +209,4 @@ onlyLow.addEventListener('change', render);
 
 // ====== First render ======
 render();
+

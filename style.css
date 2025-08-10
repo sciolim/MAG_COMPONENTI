@@ -6,7 +6,6 @@
   --muted: #64748b;
   --sky-50: #eff6ff; --sky-100:#e0f2fe; --sky-500:#0ea5e9;
   --fuchsia-50:#fdf4ff; --fuchsia-100:#fae8ff; --fuchsia-500:#d946ef;
-  --emerald-50:#ecfdf5; --emerald-100:#d1fae5; --emerald-500:#10b981;
   --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0;
   --danger:#ef4444;
   --shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
@@ -42,7 +41,7 @@ body{
 .hamburger::before{top:-6px}.hamburger::after{top:6px}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 14px;border-radius:14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s ease, box-shadow .2s ease}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:10px 14px;border-radius:14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .12s ease, box-shadow .2s ease}
 .btn:hover{transform:translateY(-1px)}
 .btn.primary{background:linear-gradient(135deg, var(--sky-500), var(--fuchsia-500));color:#fff;border:0}
 .btn.ghost{background:#fff}
@@ -56,10 +55,9 @@ body{
 
 /* Inputs */
 .input-wrap{position:relative}
-.input-wrap::after{content:' ';position:absolute;right:8px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;background: radial-gradient(circle at 35% 35%, #999 0 2px, transparent 2px) }
 input[type=text],input[type=number],textarea{
   width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);
-  border-radius:12px;padding:10px 12px;outline:none;transition:border-color .15s ease, box-shadow .2s ease
+  border-radius:12px;padding:12px 12px;outline:none;transition:border-color .15s ease, box-shadow .2s ease
 }
 input:focus,textarea:focus{border-color:#b3d8ff;box-shadow:0 0 0 4px rgba(14,165,233,.12)}
 label{font-size:12px;color:var(--muted)}
@@ -85,12 +83,16 @@ label{font-size:12px;color:var(--muted)}
 .summary-box.fuchsia{background:linear-gradient(140deg, var(--fuchsia-100), #fff)}
 .muted{color:var(--muted)} .fs-12{font-size:12px} .big-num{font-size:28px;font-weight:800}
 
-/* Actions menu */
-.actions{position:relative}
-.actions .menu{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);display:none;min-width:160px;z-index:10;overflow:hidden}
-.actions .menu button{width:100%;justify-content:flex-start;border:0;background:transparent;padding:10px 12px}
-.actions .menu button:hover{background:var(--slate-50)}
-.actions.open .menu{display:block}
+/* Actions floating menu (fixed to avoid clipping) */
+.rowmenu{
+  position:fixed; inset:auto auto 0 0; /* overridden in JS */
+  background:#fff; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow);
+  min-width:160px; z-index:1000; overflow:hidden;
+}
+.rowmenu.hidden{display:none}
+.rowmenu button{display:block; width:100%; text-align:left; padding:12px; border:0; background:#fff; font:inherit; cursor:pointer}
+.rowmenu button:hover{background:var(--slate-50)}
+.rowmenu .danger{color:#b91c1c}
 
 /* Dialog */
 dialog{border:1px solid var(--line);border-radius:18px;max-width:760px;width:calc(100% - 32px);background:#fff;color:var(--ink);box-shadow:var(--shadow)}
@@ -106,6 +108,9 @@ dialog::backdrop{background:rgba(0,0,0,.25)}
 }
 .full-row{grid-column:1 / -1}
 
+/* Footer */
+.footer{ text-align:center; color:#8a94a7; font-size:.9rem; padding:20px 10px }
+
 /* Print */
 .print-hide{ }
 @media print{
@@ -114,3 +119,4 @@ dialog::backdrop{background:rgba(0,0,0,.25)}
   table{font-size:11px}
   body{background:#fff}
 }
+

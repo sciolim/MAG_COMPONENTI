@@ -17,7 +17,8 @@
       <div class="right row gap-8">
         <button id="btnPrint" class="btn ghost">Stampa</button>
         <input id="fileImport" type="file" accept=".csv,.json,text/csv,application/json" hidden />
-        <button id="btnExportCSV" class="btn ghost">Esporta</button>
+        <button id="btnExportCSV" class="btn ghost">Esporta CSV</button>
+        <button id="btnExportJSON" class="btn ghost">Esporta JSON</button>
         <button id="btnImport" class="btn ghost">Importa</button>
         <button id="btnNew" class="btn primary">Nuovo</button>
       </div>
@@ -114,11 +115,16 @@
     </form>
   </dialog>
 
+  <!-- Menu azioni fisso per mobile (evita clipping) -->
+  <div id="rowMenu" class="rowmenu hidden">
+    <button data-edit>Modifica</button>
+    <button data-del class="danger">Elimina</button>
+  </div>
+
+  <footer class="footer">
+    © 2025 Mario Scioli - Tutti i diritti riservati
+  </footer>
+
   <script src="./script.js"></script>
-
-    <footer style="text-align:center; margin-top:20px; font-size:0.9em; color:#888;">
-        &copy; 2025 Mario Scioli - Tutti i diritti riservati
-    </footer>
 </body>
-
 </html>
