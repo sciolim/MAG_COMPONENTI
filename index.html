@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Archivio Componenti Elettronici</title>
+  <style>
+    :root{
+      --bg:#f8fafc; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+      --brand:#0ea5e9; --danger:#ef4444; --chip:#f1f5f9; --chip-ink:#0f172a;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(120deg,#eff6ff, #ffffff 40%, #fdf4ff);color:var(--ink);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial}
+    .container{max-width:1120px;margin:auto;padding:16px}
+    .topbar{position:sticky;top:0;z-index:20;backdrop-filter:saturate(180%) blur(8px);background-color:#ffffffcc;border-bottom:1px solid var(--line)}
+    .row{display:flex;gap:8px;align-items:center}
+    h1{font-size:20px;margin:0}
+    button, .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:8px 12px;border-radius:12px;cursor:pointer}
+    .btn-primary{background:var(--brand);border-color:var(--brand);color:#fff}
+    .btn-danger{border-color:var(--danger);color:#fff;background:var(--danger)}
+    .btn-ghost{background:transparent}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid-cols-3{grid-template-columns:2fr 1fr}}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+    .card h2{font-size:16px;margin:0;padding:12px 16px;border-bottom:1px solid var(--line)}
+    .card .content{padding:12px 16px}
+    input[type="text"], input[type="number"], textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px}
+    label{font-size:12px;color:var(--muted)}
+    table{width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:var(--card);text-align:left;border-bottom:1px solid var(--line);padding:10px}
+    tbody td{padding:10px;border-top:1px solid var(--line);vertical-align:top}
+    .chip{display:inline-block;background:var(--chip);color:var(--chip-ink);padding:4px 8px;border-radius:999px;font-size:12px}
+    .qty{font-size:12px;border-radius:999px;padding:4px 8px;background:#eef2ff}
+    .qty.low{background:#fee2e2;color:#991b1b}
+    .actions{position:relative}
+    .menu{position:absolute;right:0;top:36px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.08);display:none;min-width:160px}
+    .menu button{width:100%;justify-content:flex-start;border:0;background:transparent;padding:10px 12px}
+    .actions.open .menu{display:block}
+    .muted{color:var(--muted)}
+    .summary-box{border:1px solid var(--line);border-radius:16px;padding:12px;background:linear-gradient(140deg,#e0f2fe,#f0f9ff)}
+    .summary-box.alt{background:linear-gradient(140deg,#fae8ff,#fdf4ff)}
+    .right{margin-left:auto}
+    dialog{border:0;border-radius:16px;max-width:720px;width:calc(100% - 32px);}
+    dialog::backdrop{background:rgba(0,0,0,.25)}
+    .dialog-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+    .row-wrap{display:flex;flex-wrap:wrap;gap:8px}
+    .col{flex:1 1 240px}
+    .print-hide{ }
+    @media print{ .print-hide{display:none!important} .container{padding:0} table{font-size:11px} body{background:#fff} }
+  </style>
+</head>
+<body>
+  <div class="topbar print-hide">
+    <div class="container row" style="padding:12px 16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 7h18M6 11h12M6 15h12" stroke="#0f172a" stroke-width="2" stroke-linecap="round"/></svg>
+      <h1>Archivio Componenti Elettronici</h1>
+      <div class="right row">
+        <button id="btnPrint" title="Stampa"><span>Stampa</span></button>
+        <div class="actions" id="exportActions">
+          <button id="btnExport">Esporta</button>
+          <div class="menu">
+            <button id="expCSV">CSV</button>
+            <button id="expJSON">JSON</button>
+          </div>
+        </div>
+        <input id="fileImport" type="file" accept=".csv,.json,text/csv,application/json" hidden />
+        <button id="btnImport">Importa</button>
+        <button id="btnNew" class="btn-primary">Nuovo</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="container grid grid-cols-3">
+    <section class="card">
+      <h2>Ricerca & Filtri</h2>
+      <div class="content row-wrap">
+        <div class="col">
+          <label>Cerca</label>
+          <input id="q" type="text" placeholder="nome, categoria, cassetto, valore..." />
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <label><input id="onlyLow" type="checkbox" /> Solo quantità ≤ 5</label>
+        </div>
+        <div class="col" style="align-self:flex-end">
+          <button id="btnReset">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Riepilogo</h2>
+      <div class="content grid" style="grid-template-columns:1fr 1fr">
+        <div class="summary-box">
+          <div class="muted" style="font-size:12px">Totale pezzi</div>
+          <div id="totalQty" style="font-size:24px;font-weight:700">0</div>
+        </div>
+        <div class="summary-box alt">
+          <div class="muted" style="font-size:12px">Voci in archivio</div>
+          <div id="totalItems" style="font-size:24px;font-weight:700">0</div>
+        </div>
+        <div style="grid-column:1/-1;text-align:right">
+          <button id="btnClear" class="btn-danger">Svuota</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" style="grid-column:1/-1">
+      <h2>Componenti</h2>
+      <div class="content" style="padding:0">
+        <div style="overflow:auto; border-top:1px solid var(--line)">
+          <table id="tbl">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th class="right" style="text-align:right">Qtà</th>
+                <th>Cassetto</th>
+                <th>Valore</th>
+                <th>Package</th>
+                <th>Note</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="dlg">
+    <div class="dialog-head">
+      <strong id="dlgTitle">Nuovo componente</strong>
+      <button id="dlgClose" class="right btn">Chiudi</button>
+    </div>
+    <form method="dialog" id="frm">
+      <input type="hidden" id="f_id" />
+      <div class="row-wrap">
+        <div class="col">
+          <label>Nome</label>
+          <input id="f_name" type="text" placeholder="es. Resistenza 10kΩ" required />
+        </div>
+        <div class="col">
+          <label>Categoria</label>
+          <input id="f_category" type="text" placeholder="Resistenze, LED, MCU..." />
+        </div>
+        <div class="col">
+          <label>Quantità</label>
+          <input id="f_quantity" type="number" value="0" />
+        </div>
+        <div class="col">
+          <label>Posizione cassetto</label>
+          <input id="f_drawer" type="text" placeholder="A1, B3, C12" />
+        </div>
+        <div class="col">
+          <label>Valore</label>
+          <input id="f_value" type="text" placeholder="10kΩ, 100nF, 5V..." />
+        </div>
+        <div class="col">
+          <label>Package</label>
+          <input id="f_package" type="text" placeholder="0805, THT, SOT-223..." />
+        </div>
+        <div class="col" style="flex-basis:100%">
+          <label>Note</label>
+          <textarea id="f_notes" rows="3" placeholder="Dettagli, fornitore, lotto..."></textarea>
+        </div>
+      </div>
+      <div class="row" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn">Annulla</button>
+        <button id="dlgSave" class="btn-primary">Salva</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script>
+    const LS_KEY = 'electro-inventory:v1';
+    const uid = () => crypto.randomUUID();
+    const SAMPLE = [
+      { id: uid(), name: 'Resistenza 10kΩ', category: 'Resistenze', quantity: 120, drawer: 'A1', value: '10kΩ', package: '0805', notes: 'Pacco nuovo JLC' },
+      { id: uid(), name: 'Condensatore 100nF', category: 'Condensatori', quantity: 85, drawer: 'A2', value: '0.1µF', package: '0603', notes: 'Ceramico X7R' },
+      { id: uid(), name: 'ESP32-WROOM-32', category: 'MCU/Module', quantity: 6, drawer: 'B3', package: 'Module', notes: 'DevKit V1' },
+      { id: uid(), name: 'LED 5mm Rosso', category: 'LED', quantity: 150, drawer: 'C1', value: '2.0V', package: 'THT', notes: 'Diffusi' },
+    ];
+
+    let items = loadItems();
+
+    const tbody = document.getElementById('tbody');
+    const q = document.getElementById('q');
+    const onlyLow = document.getElementById('onlyLow');
+    const totalQty = document.getElementById('totalQty');
+    const totalItems = document.getElementById('totalItems');
+
+    function loadItems(){
+      try{ const raw = localStorage.getItem(LS_KEY); if(!raw) return SAMPLE; const parsed = JSON.parse(raw); return Array.isArray(parsed)?parsed:SAMPLE; }catch{ return SAMPLE }
+    }
+    function saveItems(){ localStorage.setItem(LS_KEY, JSON.stringify(items)); }
+
+    function render(){
+      const term = (q.value||'').trim().toLowerCase();
+      let arr = items.slice();
+      if (term) arr = arr.filter(it => [it.name,it.category,it.drawer,it.value,it.package,it.notes].some(v => (v||'').toLowerCase().includes(term)));
+      if (onlyLow.checked) arr = arr.filter(it => (it.quantity||0) <= 5);
+      arr.sort((a,b)=> (a.drawer||'').localeCompare(b.drawer||'') || (a.name||'').localeCompare(b.name||''));
+
+      tbody.innerHTML = '';
+      for (const it of arr){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="font-medium">${escapeHtml(it.name||'')}</td>
+          <td>${escapeHtml(it.category||'')}</td>
+          <td style="text-align:right"><span class="qty ${(+it.quantity||0) <= 5 ? 'low':''}">${it.quantity||0}</span></td>
+          <td><span class="chip">${escapeHtml(it.drawer||'')}</span></td>
+          <td>${escapeHtml(it.value||'')}</td>
+          <td>${escapeHtml(it.package||'')}</td>
+          <td style="max-width:28rem; white-space:pre-wrap">${escapeHtml(it.notes||'')}</td>
+          <td class="actions"><button class="btn btn-ghost act">⋮</button>
+            <div class="menu">
+              <button data-edit>Modifica</button>
+              <button data-del style="color:#b91c1c">Elimina</button>
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+        const actions = tr.querySelector('.actions');
+        tr.querySelector('.act').addEventListener('click',()=>{ actions.classList.toggle('open') })
+        document.addEventListener('click', (e)=>{ if(!actions.contains(e.target)) actions.classList.remove('open') })
+        tr.querySelector('[data-edit]').addEventListener('click',()=> openDialog(it))
+        tr.querySelector('[data-del]').addEventListener('click',()=> delItem(it.id))
+      }
+      totalQty.textContent = String(arr.reduce((s,i)=>s+(+i.quantity||0),0));
+      totalItems.textContent = String(items.length);
+    }
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]))
+    }
+
+    // Import/Export
+    function exportCSV(){
+      const headers = ['id','name','category','quantity','drawer','value','package','notes'];
+      const lines = [headers.join(',')].concat(items.map(it => headers.map(h=>{
+        const val = String(it[h] ?? '').replaceAll('"','""');
+        return (val.includes(',')||val.includes('\n')||val.includes('"')) ? `"${val}"` : val;
+      }).join(',')));
+      download(lines.join('\n'), `archivio-componenti-${ts()}.csv`, 'text/csv;charset=utf-8;');
+    }
+    function exportJSON(){
+      download(JSON.stringify(items,null,2), 'archivio-componenti.json', 'application/json');
+    }
+    function download(text, name, type){
+      const blob = new Blob([text],{type}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
+    }
+    function ts(){ return new Date().toISOString().slice(0,19).replace(/[:T]/g,'-') }
+
+    const fileImport = document.getElementById('fileImport');
+    fileImport.addEventListener('change', (e)=>{
+      const file = e.target.files && e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const text = String(reader.result || '');
+        if (file.name.endsWith('.json')){
+          try{ const data = JSON.parse(text); if(Array.isArray(data)) { items = data; saveItems(); render(); } }catch{}
+        } else {
+          const rows = parseCSV(text);
+          if (!rows.length) return;
+          const headers = rows[0].map(h=>h.trim());
+          const idx = h => headers.indexOf(h);
+          const list = rows.slice(1).filter(r => r.length>=2 && r.some(x=>x && String(x).trim())).map(r=>({
+            id: r[idx('id')] || uid(),
+            name: r[idx('name')] || '',
+            category: r[idx('category')] || '',
+            quantity: Number(r[idx('quantity')] || 0),
+            drawer: r[idx('drawer')] || '',
+            value: r[idx('value')] || '',
+            package: r[idx('package')] || '',
+            notes: r[idx('notes')] || '',
+          }));
+          items = list; saveItems(); render();
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    function parseCSV(text){
+      const rows=[]; let i=0, cur='', inQ=false, row=[]; while(i<=text.length){
+        const ch = text[i] ?? '\n';
+        if (inQ){
+          if (ch==='"' && text[i+1]==='"'){ cur+='"'; i++; }
+          else if (ch==='"'){ inQ=false; }
+          else { cur+=ch }
+        } else {
+          if (ch==='"') inQ=true;
+          else if (ch===','){ row.push(cur); cur=''; }
+          else if (ch==='\n' || i===text.length){ row.push(cur); rows.push(row); row=[]; cur=''; }
+          else { cur+=ch }
+        }
+        i++;
+      } return rows;
+    }
+
+    // CRUD
+    function delItem(id){ items = items.filter(x => x.id !== id); saveItems(); render(); }
+    function upsert(data){
+      const idx = items.findIndex(x => x.id === data.id);
+      if (idx === -1) items.push(data); else items[idx] = data;
+      saveItems(); render();
+    }
+
+    // Dialog
+    const dlg = document.getElementById('dlg');
+    const dlgTitle = document.getElementById('dlgTitle');
+    const frm = document.getElementById('frm');
+    const f = id => document.getElementById(id);
+    function openDialog(initial){
+      dlgTitle.textContent = initial ? 'Modifica componente' : 'Nuovo componente';
+      f('f_id').value = initial?.id || uid();
+      f('f_name').value = initial?.name || '';
+      f('f_category').value = initial?.category || '';
+      f('f_quantity').value = initial?.quantity ?? 0;
+      f('f_drawer').value = initial?.drawer || '';
+      f('f_value').value = initial?.value || '';
+      f('f_package').value = initial?.package || '';
+      f('f_notes').value = initial?.notes || '';
+      dlg.showModal();
+    }
+
+    document.getElementById('dlgClose').addEventListener('click', ()=> dlg.close());
+    document.getElementById('dlgSave').addEventListener('click', (e)=>{
+      e.preventDefault();
+      if (!f('f_name').value.trim()) { alert('Inserisci un nome'); return; }
+      const data = {
+        id: f('f_id').value,
+        name: f('f_name').value,
+        category: f('f_category').value,
+        quantity: Number(f('f_quantity').value||0),
+        drawer: f('f_drawer').value,
+        value: f('f_value').value,
+        package: f('f_package').value,
+        notes: f('f_notes').value,
+      };
+      upsert(data); dlg.close();
+    });
+
+    // Topbar actions
+    document.getElementById('btnNew').addEventListener('click', ()=> openDialog(null));
+    document.getElementById('btnImport').addEventListener('click', ()=> fileImport.click());
+    document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+    document.getElementById('btnReset').addEventListener('click', ()=> { q.value=''; onlyLow.checked=false; render(); });
+    document.getElementById('btnClear').addEventListener('click', ()=> { if (confirm("Svuotare completamente l'archivio?")) { items=[]; saveItems(); render(); } });
+
+    const exportActions = document.getElementById('exportActions');
+    document.getElementById('btnExport').addEventListener('click', ()=> exportActions.classList.toggle('open'));
+    document.addEventListener('click', (e)=>{ if (!exportActions.contains(e.target)) exportActions.classList.remove('open') });
+    document.getElementById('expCSV').addEventListener('click', exportCSV);
+    document.getElementById('expJSON').addEventListener('click', exportJSON);
+
+    // Filters
+    q.addEventListener('input', render);
+    onlyLow.addEventListener('change', render);
+
+    // First render
+    render();
+  </script>
+</body>
+</html>
